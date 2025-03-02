@@ -12,8 +12,8 @@ const FileSchema = z.object({
       message: 'File size should be less than 5MB',
     })
     // Update the file type based on the kind of files you want to accept
-    .refine((file) => ['image/jpeg', 'image/png'].includes(file.type), {
-      message: 'File type should be JPEG or PNG',
+    .refine((file) => ['image/jpeg', 'image/png', 'text/csv', 'text/plain', 'application/pdf', 'text/html','css','javascript','json','xml','sql','python','java','c','c++','c#','ruby','php','swift','kotlin','go','rust','typescript'].includes(file.type), {
+      message: 'File type should be JPEG or PNG or CSV or PDF or HTML or CSS or JavaScript or JSON or XML or SQL or Python or Java or C or C++ or C# or Ruby or PHP or Swift or Kotlin or Go or Rust or TypeScript',
     }),
 });
 

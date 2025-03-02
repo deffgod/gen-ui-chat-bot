@@ -1,12 +1,9 @@
 import { openai } from '@ai-sdk/openai';
+import { customProvider, extractReasoningMiddleware, wrapLanguageModel, } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import { fireworks } from '@ai-sdk/fireworks';
 
-import {
-  customProvider,
-  extractReasoningMiddleware,
-  wrapLanguageModel,
-} from 'ai';
+
 
 export const DEFAULT_CHAT_MODEL: string = 'chat-model-small';
 
@@ -47,6 +44,21 @@ export const chatModels: Array<ChatModel> = [
   {
     id: 'chat-model-reasoning',
     name: 'Reasoning model',
+    description: 'Uses advanced reasoning',
+  },
+  {
+    id: 'title-model',
+    name: 'Title model',
+    description: 'Uses advanced reasoning',
+  },
+  {
+    id: 'artifact-model',
+    name: 'Artifact model',
+    description: 'Uses advanced reasoning',
+  },
+  {
+    id: 'image-model',
+    name: 'Image model',
     description: 'Uses advanced reasoning',
   },
 ];
