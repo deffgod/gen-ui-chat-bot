@@ -1,0 +1,271 @@
+/**
+ * Claude Reasoning with Tool Calling Example
+ * 
+ * This file demonstrates how to combine Claude's reasoning capabilities
+ * with tool calling for more complex AI applications.
+ * 
+ * NOTE: This is an EXAMPLE file only, not meant to be imported directly into your application.
+ */
+
+/**
+ * Example Code (copy and paste this to use):
+ * 
+ * ```typescript
+ * import { anthropic } from '@ai-sdk/anthropic';
+ * import { generateText } from 'ai';
+ * 
+ * // Define tool schemas
+ * const tools = [
+ *   {
+ *     name: 'search_documentation',
+ *     description: 'Search the documentation for specific information',
+ *     parameters: {
+ *       type: 'object',
+ *       properties: {
+ *         query: {
+ *           type: 'string',
+ *           description: 'The search query',
+ *         },
+ *         filter: {
+ *           type: 'string',
+ *           enum: ['all', 'api', 'guides', 'tutorials'],
+ *           description: 'Filter results by type',
+ *         },
+ *       },
+ *       required: ['query'],
+ *     },
+ *   },
+ *   {
+ *     name: 'generate_code',
+ *     description: 'Generate code for a specific task',
+ *     parameters: {
+ *       type: 'object',
+ *       properties: {
+ *         language: {
+ *           type: 'string',
+ *           description: 'The programming language',
+ *         },
+ *         task: {
+ *           type: 'string',
+ *           description: 'Description of what the code should do',
+ *         },
+ *       },
+ *       required: ['language', 'task'],
+ *     },
+ *   },
+ * ];
+ * 
+ * // Example tool implementations
+ * const toolImplementations = {
+ *   search_documentation: async ({ query, filter = 'all' }) => {
+ *     console.log(`Searching documentation for "${query}" with filter "${filter}"`);
+ *     // In a real implementation, this would call your documentation search API
+ *     return {
+ *       results: [
+ *         { title: 'Getting Started', url: '/docs/getting-started', snippet: 'Learn how to get started with our API...' },
+ *         { title: 'API Reference', url: '/docs/api', snippet: 'Detailed API reference documentation...' },
+ *       ],
+ *     };
+ *   },
+ *   generate_code: async ({ language, task }) => {
+ *     console.log(`Generating ${language} code for task: ${task}`);
+ *     // In a real implementation, this might call another model or service
+ *     // For demo purposes, just return placeholder
+ *     return {
+ *       code: `// Example ${language} code for: ${task}\nconsole.log("Hello world");`,
+ *     };
+ *   },
+ * };
+ * 
+ * /**
+ *  * Generate a response with Claude using reasoning and tool calling
+ *  * @param prompt The user's prompt
+ *  * @param includeReasoning Whether to include reasoning in the response
+ *  * @returns The generated response and any tool calls made
+ *  */
+ * export async function generateWithToolsAndReasoning(prompt: string, includeReasoning = true) {
+ *   try {
+ *     let toolResults = [];
+ *     
+ *     const result = await generateText({
+ *       model: anthropic('claude-3-sonnet-20240229'),
+ *       prompt,
+ *       providerOptions: {
+ *         anthropic: {
+ *           thinking: includeReasoning ? { type: 'enabled', budgetTokens: 15000 } : undefined,
+ *           tools,
+ *         },
+ *       },
+ *       tool: {
+ *         mode: 'auto',
+ *         tools,
+ *         caller: async (name, args) => {
+ *           if (name in toolImplementations) {
+ *             const result = await toolImplementations[name](args);
+ *             toolResults.push({ tool: name, args, result });
+ *             return result;
+ *           }
+ *           throw new Error(`Tool "${name}" not implemented`);
+ *         },
+ *       },
+ *     });
+ *     
+ *     return {
+ *       response: result.text,
+ *       reasoning: result.reasoning || null,
+ *       toolCalls: toolResults,
+ *     };
+ *   } catch (error) {
+ *     console.error('Error generating with tools and reasoning:', error);
+ *     throw error;
+ *   }
+ * }
+ * ```
+ */
+
+/**
+ * Example usage with React:
+ * 
+ * ```tsx
+ * 'use client';
+ * 
+ * import { useState } from 'react';
+ * import { generateWithToolsAndReasoning } from '@/lib/ai/claude-reasoning-tools';
+ * 
+ * export default function AIAssistantWithTools() {
+ *   const [prompt, setPrompt] = useState('');
+ *   const [response, setResponse] = useState('');
+ *   const [reasoning, setReasoning] = useState('');
+ *   const [toolCalls, setToolCalls] = useState([]);
+ *   const [showReasoning, setShowReasoning] = useState(true);
+ *   const [loading, setLoading] = useState(false);
+ *   
+ *   const handleSubmit = async (e) => {
+ *     e.preventDefault();
+ *     setLoading(true);
+ *     
+ *     try {
+ *       const result = await generateWithToolsAndReasoning(prompt, showReasoning);
+ *       setResponse(result.response);
+ *       setReasoning(result.reasoning);
+ *       setToolCalls(result.toolCalls);
+ *     } catch (error) {
+ *       console.error('Error:', error);
+ *     } finally {
+ *       setLoading(false);
+ *     }
+ *   };
+ *   
+ *   return (
+ *     <div className="max-w-4xl mx-auto p-6">
+ *       <h1 className="text-2xl font-bold mb-6">AI Assistant with Tools</h1>
+ *       
+ *       <form onSubmit={handleSubmit} className="mb-8">
+ *         <div className="mb-4">
+ *           <label className="block mb-2 font-medium">
+ *             Your Question
+ *           </label>
+ *           <textarea
+ *             value={prompt}
+ *             onChange={(e) => setPrompt(e.target.value)}
+ *             className="w-full p-3 border rounded"
+ *             rows={3}
+ *             placeholder="Ask something that may require using tools..."
+ *             required
+ *           />
+ *         </div>
+ *         
+ *         <div className="mb-4">
+ *           <label className="flex items-center">
+ *             <input
+ *               type="checkbox"
+ *               checked={showReasoning}
+ *               onChange={(e) => setShowReasoning(e.target.checked)}
+ *               className="mr-2"
+ *             />
+ *             Show reasoning process
+ *           </label>
+ *         </div>
+ *         
+ *         <button
+ *           type="submit"
+ *           disabled={loading || !prompt.trim()}
+ *           className="py-2 px-4 bg-blue-600 text-white rounded disabled:opacity-50"
+ *         >
+ *           {loading ? 'Generating...' : 'Submit'}
+ *         </button>
+ *       </form>
+ *       
+ *       {response && (
+ *         <div className="space-y-6">
+ *           <div>
+ *             <h2 className="text-xl font-semibold mb-2">Response</h2>
+ *             <div className="p-4 bg-blue-50 rounded whitespace-pre-wrap">
+ *               {response}
+ *             </div>
+ *           </div>
+ *           
+ *           {reasoning && (
+ *             <div>
+ *               <h2 className="text-xl font-semibold mb-2">Reasoning Process</h2>
+ *               <div className="p-4 bg-gray-100 rounded whitespace-pre-wrap">
+ *                 {reasoning}
+ *               </div>
+ *             </div>
+ *           )}
+ *           
+ *           {toolCalls.length > 0 && (
+ *             <div>
+ *               <h2 className="text-xl font-semibold mb-2">Tool Calls</h2>
+ *               <div className="space-y-3">
+ *                 {toolCalls.map((call, index) => (
+ *                   <div key={index} className="p-4 bg-yellow-50 rounded border border-yellow-200">
+ *                     <div className="font-medium mb-1">
+ *                       Tool: {call.tool}
+ *                     </div>
+ *                     <div className="mb-2">
+ *                       <span className="font-medium">Arguments:</span>{' '}
+ *                       <code className="bg-gray-100 text-sm px-1 py-0.5 rounded">
+ *                         {JSON.stringify(call.args)}
+ *                       </code>
+ *                     </div>
+ *                     <div>
+ *                       <span className="font-medium">Result:</span>{' '}
+ *                       <code className="bg-gray-100 text-sm px-1 py-0.5 rounded">
+ *                         {JSON.stringify(call.result)}
+ *                       </code>
+ *                     </div>
+ *                   </div>
+ *                 ))}
+ *               </div>
+ *             </div>
+ *           )}
+ *         </div>
+ *       )}
+ *     </div>
+ *   );
+ * }
+ * ```
+ */
+
+/**
+ * Integration Notes:
+ * 
+ * Claude models are particularly good at reasoning through complex tasks that require
+ * multiple tool calls. The combination of reasoning and tool calling provides a powerful
+ * way to build assistants that can interact with external systems.
+ * 
+ * Key concepts:
+ * 
+ * 1. Tool definitions need to follow the JSON Schema format
+ * 2. The tool caller is responsible for implementing the actual functionality
+ * 3. Setting `mode: 'auto'` allows Claude to decide when to call tools
+ * 4. Using the thinking option with a generous budget ensures Claude has enough tokens
+ *    to reason through complex problems
+ * 
+ * For more advanced applications, you can implement more sophisticated tools:
+ * - Database queries
+ * - API calls to external services
+ * - File system operations
+ * - Custom code execution
+ */ 

@@ -1,0 +1,302 @@
+/**
+ * Claude Artifact Generator Example
+ * 
+ * This file demonstrates specialized prompting techniques to get Claude to generate
+ * high-quality UI components and other artifacts with structured output.
+ * 
+ * NOTE: This is an EXAMPLE file only, not meant to be imported directly into your application.
+ * 
+ * Example Code (copy and paste this to use):
+ * 
+ * ```typescript
+ * import { anthropic } from '@ai-sdk/anthropic';
+ * import { generateText } from 'ai';
+ * 
+ * // Types for structured UI component generation
+ * interface UIComponentRequest {
+ *   description: string;
+ *   requiredProps?: string[];
+ *   styling?: 'tailwind' | 'css' | 'css-in-js';
+ *   componentType?: 'functional' | 'class';
+ *   complexity?: 'simple' | 'moderate' | 'complex';
+ *   framework?: 'react' | 'next' | 'vue' | 'svelte';
+ *   additionalContext?: string;
+ * }
+ * 
+ * interface UIComponentResult {
+ *   code: string;
+ *   explanation: string;
+ *   usageExamples: string;
+ *   props: {
+ *     name: string;
+ *     type: string;
+ *     description: string;
+ *     required: boolean;
+ *   }[];
+ * }
+ * 
+ * /**
+ *  * Generate a UI component with Claude's structured reasoning
+ *  * @param request The component request details
+ *  * @returns The generated component and metadata
+ *  */
+ * export async function generateUIComponent(request: UIComponentRequest): Promise<UIComponentResult> {
+ *   const framework = request.framework || 'react';
+ *   const styling = request.styling || 'tailwind';
+ *   
+ *   const prompt = `
+ * I need you to create a high-quality ${framework} component with the following details:
+ * 
+ * Description: ${request.description}
+ * ${request.requiredProps ? `Required Props: ${request.requiredProps.join(', ')}` : ''}
+ * Styling Approach: ${styling}
+ * Component Type: ${request.componentType || 'functional'}
+ * Complexity Level: ${request.complexity || 'moderate'}
+ * ${request.additionalContext ? `Additional Context: ${request.additionalContext}` : ''}
+ * 
+ * Please respond with a JSON object that includes:
+ * 1. The component code
+ * 2. A brief explanation of how it works
+ * 3. Usage examples
+ * 4. Documentation for all props
+ * 
+ * Format your response as valid JSON with the following structure:
+ * {
+ *   "code": "// Component code here",
+ *   "explanation": "Explanation here",
+ *   "usageExamples": "Usage examples here",
+ *   "props": [
+ *     {
+ *       "name": "propName",
+ *       "type": "propType",
+ *       "description": "Prop description",
+ *       "required": true/false
+ *     }
+ *   ]
+ * }
+ * `;
+ * 
+ *   try {
+ *     const { text, reasoning } = await generateText({
+ *       model: anthropic('claude-3-sonnet-20240229'),
+ *       prompt,
+ *       providerOptions: {
+ *         anthropic: {
+ *           thinking: { type: 'enabled', budgetTokens: 12000 },
+ *         },
+ *       },
+ *       format: 'json',
+ *     });
+ *     
+ *     // Parse the JSON response
+ *     const result: UIComponentResult = JSON.parse(text);
+ *     return result;
+ *   } catch (error) {
+ *     console.error('Error generating UI component:', error);
+ *     throw error;
+ *   }
+ * }
+ * 
+ * /**
+ *  * Generate an entire feature with multiple components
+ *  * @param featureDescription Description of the feature to build
+ *  * @param options Optional configuration
+ *  * @returns A structured response with all components needed for the feature
+ *  */
+ * export async function generateFeature(
+ *   featureDescription: string,
+ *   options: {
+ *     framework?: 'react' | 'next' | 'vue' | 'svelte';
+ *     styling?: 'tailwind' | 'css' | 'css-in-js';
+ *     stateManagement?: 'react-hooks' | 'context' | 'redux' | 'zustand';
+ *     includeTests?: boolean;
+ *   } = {}
+ * ) {
+ *   const framework = options.framework || 'react';
+ *   const styling = options.styling || 'tailwind';
+ *   const stateManagement = options.stateManagement || 'react-hooks';
+ *   
+ *   const prompt = `
+ * Create a complete ${framework} feature based on this description:
+ * 
+ * "${featureDescription}"
+ * 
+ * Technical requirements:
+ * - Styling: ${styling}
+ * - State management: ${stateManagement}
+ * ${options.includeTests ? '- Include unit tests' : ''}
+ * 
+ * Break down this feature into all necessary components and files.
+ * For each file, provide:
+ * 1. Filename and path
+ * 2. Complete code implementation
+ * 3. Brief explanation
+ * 
+ * Format your response as valid JSON with the following structure:
+ * {
+ *   "featureOverview": "Description of how the feature works",
+ *   "files": [
+ *     {
+ *       "path": "relative/path/to/Component.tsx",
+ *       "code": "// Complete code here",
+ *       "explanation": "Brief explanation"
+ *     }
+ *   ],
+ *   "additionalNotes": "Any other important information"
+ * }
+ * `;
+ * 
+ *   try {
+ *     const { text, reasoning } = await generateText({
+ *       model: anthropic('claude-3-sonnet-20240229'),
+ *       prompt,
+ *       providerOptions: {
+ *         anthropic: {
+ *           thinking: { type: 'enabled', budgetTokens: 20000 },
+ *         },
+ *       },
+ *       format: 'json',
+ *     });
+ *     
+ *     // Parse the JSON response
+ *     return JSON.parse(text);
+ *   } catch (error) {
+ *     console.error('Error generating feature:', error);
+ *     throw error;
+ *   }
+ * }
+ * ```
+ * 
+ * Example usage with React:
+ * 
+ * ```tsx
+ * 'use client';
+ * 
+ * import { useState } from 'react';
+ * import { generateUIComponent } from '@/lib/ai/claude-artifact-generator';
+ * 
+ * export default function UIComponentGenerator() {
+ *   const [description, setDescription] = useState('');
+ *   const [framework, setFramework] = useState('react');
+ *   const [styling, setStyling] = useState('tailwind');
+ *   const [componentCode, setComponentCode] = useState('');
+ *   const [explanation, setExplanation] = useState('');
+ *   const [usageExamples, setUsageExamples] = useState('');
+ *   const [loading, setLoading] = useState(false);
+ *   
+ *   const handleSubmit = async (e) => {
+ *     e.preventDefault();
+ *     setLoading(true);
+ *     
+ *     try {
+ *       const result = await generateUIComponent({
+ *         description,
+ *         framework: framework as any,
+ *         styling: styling as any,
+ *       });
+ *       
+ *       setComponentCode(result.code);
+ *       setExplanation(result.explanation);
+ *       setUsageExamples(result.usageExamples);
+ *     } catch (error) {
+ *       console.error('Error:', error);
+ *     } finally {
+ *       setLoading(false);
+ *     }
+ *   };
+ *   
+ *   return (
+ *     <div className="max-w-4xl mx-auto p-6">
+ *       <h1 className="text-2xl font-bold mb-6">UI Component Generator</h1>
+ *       
+ *       <form onSubmit={handleSubmit} className="mb-8">
+ *         <div className="mb-4">
+ *           <label className="block mb-2 font-medium">
+ *             Component Description
+ *           </label>
+ *           <textarea
+ *             value={description}
+ *             onChange={(e) => setDescription(e.target.value)}
+ *             className="w-full p-3 border rounded"
+ *             rows={3}
+ *             placeholder="Describe the component you want to generate..."
+ *             required
+ *           />
+ *         </div>
+ *         
+ *         <div className="grid grid-cols-2 gap-4 mb-4">
+ *           <div>
+ *             <label className="block mb-2 font-medium">Framework</label>
+ *             <select
+ *               value={framework}
+ *               onChange={(e) => setFramework(e.target.value)}
+ *               className="w-full p-2 border rounded"
+ *             >
+ *               <option value="react">React</option>
+ *               <option value="next">Next.js</option>
+ *               <option value="vue">Vue</option>
+ *               <option value="svelte">Svelte</option>
+ *             </select>
+ *           </div>
+ *           
+ *           <div>
+ *             <label className="block mb-2 font-medium">Styling</label>
+ *             <select
+ *               value={styling}
+ *               onChange={(e) => setStyling(e.target.value)}
+ *               className="w-full p-2 border rounded"
+ *             >
+ *               <option value="tailwind">Tailwind CSS</option>
+ *               <option value="css">Plain CSS</option>
+ *               <option value="css-in-js">CSS-in-JS</option>
+ *             </select>
+ *           </div>
+ *         </div>
+ *         
+ *         <button
+ *           type="submit"
+ *           disabled={loading || !description}
+ *           className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+ *         >
+ *           {loading ? 'Generating...' : 'Generate Component'}
+ *         </button>
+ *       </form>
+ *       
+ *       {componentCode && (
+ *         <div>
+ *           <h2 className="text-xl font-bold mb-4">Generated Component</h2>
+ *           <div className="mb-6 p-4 bg-gray-100 rounded overflow-auto">
+ *             <pre>{componentCode}</pre>
+ *           </div>
+ *           
+ *           <h2 className="text-xl font-bold mb-4">Explanation</h2>
+ *           <div className="mb-6">{explanation}</div>
+ *           
+ *           <h2 className="text-xl font-bold mb-4">Usage Examples</h2>
+ *           <div className="p-4 bg-gray-100 rounded overflow-auto">
+ *             <pre>{usageExamples}</pre>
+ *           </div>
+ *         </div>
+ *       )}
+ *     </div>
+ *   );
+ * }
+ * ```
+ */
+
+/**
+ * Integration Notes:
+ * 
+ * The JSON format option in generateText is critical for structured responses:
+ * 
+ * ```typescript
+ * generateText({
+ *   // ...
+ *   format: 'json',
+ * });
+ * ```
+ * 
+ * Claude is particularly good at structured generation with heavy constraints,
+ * making it ideal for artifact and UI generation. The providerOptions with thinking
+ * enabled allow Claude to work through complex component design problems step-by-step.
+ */ 
