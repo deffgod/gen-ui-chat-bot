@@ -40,6 +40,15 @@ export const myProvider = customProvider({
     }),
     "title-model": openai("gpt-4-turbo"),
     "artifact-model": openai("gpt-4o-mini"),
+    /**
+     * Note: This is a placeholder for Code Interpreter functionality.
+     * To fully enable Code Interpreter capabilities as described in OpenAI documentation,
+     * you would need to configure the tools parameter at the API level.
+     * The current AI SDK may not directly support the tools configuration.
+     * For complete implementation, consider using the OpenAI API directly
+     * or updating to an AI SDK version that supports the Code Interpreter tool.
+     */
+    "code-interpreter-model": openai("gpt-4o"),
   },
   imageModels: {
     'small-model': openai.image('dall-e-3'),
@@ -82,5 +91,10 @@ export const chatModels: Array<ChatModel> = [
     id: 'image-model',
     name: 'Image model',
     description: 'Uses advanced reasoning',
+  },
+  {
+    id: 'code-interpreter-model',
+    name: 'Code Interpreter',
+    description: 'Executes Python code to solve problems',
   },
 ];
