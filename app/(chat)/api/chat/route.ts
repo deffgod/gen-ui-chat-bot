@@ -59,6 +59,22 @@ export async function POST(request: Request) {
     messages: [{ ...userMessage, createdAt: new Date(), chatId: id }],
   });
 
+  // Return early with error message if code interpreter model is selected
+  // The code interpreter requires direct OpenAI API usage with the Assistants API
+  // This can't be properly supported through the AI SDK streamText function
+  if (selectedChatModel === 'code-interpreter-model') {
+    return new Response(JSON.stringify({
+      id: generateUUID(),
+      role: 'assistant',
+      content: "I'm sorry, but the Code Interpreter model requires direct use of OpenAI's Assistants API and cannot be used through this interface. Please select a different model or refer to the code-interpreter.example.ts file for implementation details."
+    }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+  }
+
   return createDataStreamResponse({
     execute: (dataStream) => {
       const result = streamText({

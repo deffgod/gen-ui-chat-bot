@@ -41,12 +41,20 @@ export const myProvider = customProvider({
     "title-model": openai("gpt-4-turbo"),
     "artifact-model": openai("gpt-4o-mini"),
     /**
-     * Note: This is a placeholder for Code Interpreter functionality.
-     * To fully enable Code Interpreter capabilities as described in OpenAI documentation,
-     * you would need to configure the tools parameter at the API level.
-     * The current AI SDK may not directly support the tools configuration.
-     * For complete implementation, consider using the OpenAI API directly
-     * or updating to an AI SDK version that supports the Code Interpreter tool.
+     * IMPORTANT: Code Interpreter Integration Limitation
+     * 
+     * The Code Interpreter functionality requires OpenAI's Assistants API, which is not
+     * directly compatible with the AI SDK's streamText approach used in this application.
+     * 
+     * When this model is selected in the UI, the API will return a message explaining this limitation.
+     * 
+     * To properly implement Code Interpreter functionality:
+     * 1. Use OpenAI's Assistants API directly
+     * 2. Create a separate API route specifically for Code Interpreter
+     * 3. See lib/ai/code-interpreter.example.ts for implementation details
+     * 
+     * Currently, this model entry acts as a placeholder but will not provide actual code
+     * execution capabilities when selected.
      */
     "code-interpreter-model": openai("gpt-4o"),
   },
@@ -80,17 +88,17 @@ export const chatModels: Array<ChatModel> = [
   {
     id: 'title-model',
     name: 'Title model',
-    description: 'Uses advanced reasoning',
+    description: 'Title model for title generation',
   },
   {
     id: 'artifact-model',
     name: 'Artifact model',
-    description: 'Uses advanced reasoning',
+    description: 'UI model for artifact generation',
   },
   {
     id: 'image-model',
     name: 'Image model',
-    description: 'Uses advanced reasoning',
+    description: 'Image model for image generation',
   },
   {
     id: 'code-interpreter-model',
